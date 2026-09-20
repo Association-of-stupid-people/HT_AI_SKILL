@@ -1,0 +1,23 @@
+{
+  "name": "@association-of-stupid-people/ht-ai-skills",
+  "version": "1.0.0",
+  "description": "Production-ready Agent Skills and Rules optimized for AI harnesses (Claude Code, Oh My Pi, Codex, Cursor)",
+  "main": "bin/install.js",
+  "bin": {
+    "ht-ai-skills": "bin/install.js"
+  },
+  "scripts": {
+    "test": "node bin/install.js --dry-run"
+  },
+  "keywords": [
+    "agent-skills",
+    "claude-code",
+    "oh-my-pi",
+    "codex",
+    "cursor",
+    "token-optimization",
+    "subagents"
+  ],
+  "author": "Association of Stupid People",
+  "license": "MIT"
+}

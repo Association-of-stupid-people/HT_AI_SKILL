@@ -1,83 +1,94 @@
-# Bộ Skills Tối Ưu Hóa Tương Tác Với Harness (Oh My Pi / AI Agent Harness)
+# HT_AI_SKILL (Harness AI Skills & Agent Routing)
 
-Kho lưu trữ này cung cấp bộ kỹ năng (skills), quy tắc (rules), và prompt patterns chuẩn hóa giúp AI tận dụng tối đa năng lực của agent harness: điều phối subagent (`task`), giao tiếp ngang hàng/tiến trình (`hub`), code intelligence (`lsp`, `ast_edit`), và vòng lặp thực thi tự động.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Platform](https://img.shields.io/badge/Agents-Claude%20Code%20%7C%20Oh%20My%20Pi%20%7C%20Codex%20%7C%20Cursor-blue)](https://github.com/Association-of-stupid-people/HT_AI_SKILL)
+
+Bộ kỹ năng (Skills), quy tắc (Rules) và kịch bản phân rã tác vụ chuẩn mã nguồn mở, tối ưu hóa toàn diện cho các hệ thống AI Agent Harness: **Claude Code**, **Oh My Pi (OMP)**, **Codex**, **OpenCode**, và **Cursor**.
 
 ---
 
-## 1. Cấu Trúc Thư Mục Chuẩn
+## 📦 Cài Đặt (Quick Installation)
 
-```text
-HT_AI_SKILL/
-├── README.md                          # Tổng quan, hướng dẫn cài đặt và tích hợp
-├── docs/                              # Tài liệu kiến trúc & hướng dẫn tích hợp
-│   ├── lazy-loading-architecture.md   # Cơ chế nhúng tiến bộ (Progressive Disclosure)
-│   └── multi-agent-compatibility.md   # Bảng ánh xạ cho Claude Code, Codex, Cursor, Cline
-├── CLAUDE.md                          # File nạp tự động cho Claude Code
-├── AGENTS.md                          # File nạp tự động cho Codex & Universal Agents
-├── skills/                            # Các skill kích hoạt theo ngữ cảnh
-│   ├── INDEX.md                       # Manifest tinh gọn chứa danh mục & trigger
-│   ├── harness-task-architect/        # Phân rã nhiệm vụ & điều phối subagent song song
-│   │   ├── SKILL.md                   # Chỉ dẫn kích hoạt và quy tắc thực thi
-│   │   └── prompts/
-│   │       └── task-decomposition.md  # Template phân tách context, contracts và task units
-│   ├── harness-subagent-master/       # Chuyên sâu về phân công, giám sát & thu hồi subagent
-│   │   └── SKILL.md                   # Agent typing, ma trận vai trò, template fanning-out
-│   ├── harness-hub-orchestrator/      # Quản lý tiến trình nền, workers & peer messaging
-│   │   ├── SKILL.md
-│   │   └── workflows/
-│   │       ├── process-lifecycle.md   # Khởi chạy, readiness check, logs & graceful shutdown
-│   │       └── peer-coordination.md   # Giao tiếp IRC giữa các subagent
-│   ├── harness-code-intelligence/     # Tối ưu hóa đọc & sửa mã nguồn
-│   │   ├── SKILL.md
-│   │   └── recipes/
-│   │       ├── lsp-first.md           # Điều hướng & refactor qua LSP thay vì text search
-│   │       ├── ast-rewrite.md         # Quy tắc codemod an toàn qua AST pattern
-│   │       └── surgical-edit.md       # Kỹ thuật dùng line-anchored edit chính xác
-│   ├── harness-token-routing/         # Điều hướng công cụ tối ưu token (CodeGraph, RTK, Mem, Caveman)
-│   │   └── SKILL.md                   # Chu trình 4 pha nén token và kịch bản kích hoạt
-│   └── harness-verification-loop/     # Kiểm thử chứng minh & đóng gói bàn giao
-│       ├── SKILL.md
-│       └── checks/
-│           ├── smoke-test-patterns.md # Kiểm thử thực tế (CLI, API, UI headless)
-│           └── completion-gate.md     # Checklist nghiệm thu trước khi kết thúc turn
-├── rules/                             # Các quy tắc nền tảng nạp vào runtime
-│   ├── 01-anti-patterns.md            # Các lỗi AI thường gặp và cách chặn
-│   ├── 02-concurrency-rules.md        # Ràng buộc chạy song song (batch cap, non-overlapping)
-│   ├── 03-verification-standards.md   # Tiêu chuẩn bằng chứng thực thi (deliverable proof)
-│   ├── 04-tokenless-ecosystem.md      # Quy tắc phối hợp CodeGraph, Claude-Mem, RTK, Caveman
-│   └── 05-task-partitioning.md        # Nguyên tắc phân rã task lát cắt dọc & biên giới sở hữu
-└── templates/                         # Mẫu output & contracts dùng chung
-    ├── task-batch.json                # Schema mẫu khi gọi function `task`
-    └── verification-report.md         # Template báo cáo bằng chứng nghiệm thu
+### Cách 1: Cài đặt tự động qua 1 dòng lệnh (Khuyên dùng)
+
+**macOS / Linux:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/Association-of-stupid-people/HT_AI_SKILL/main/scripts/install.sh | bash
+```
+
+**Windows (PowerShell):**
+```powershell
+irm https://raw.githubusercontent.com/Association-of-stupid-people/HT_AI_SKILL/main/scripts/install.ps1 | iex
 ```
 
 ---
 
-## 2. Chi Tiết Các Kỹ Năng Cốt Lõi (Core Skills)
+### Cách 2: Dùng Node / npx
 
-### 2.1 `harness-task-architect`
-* **Mục tiêu:** Hướng dẫn AI cách phân rã bài toán phức tạp thành các đơn vị độc lập để chạy đa agent qua `task`.
-* **Trọng tâm:**
-  - Định dạng chuẩn: `# Goal`, `# Constraints`, `# Contract` trong `context`.
-  - Phân bổ đúng agent type (`scout` cho việc đọc/tra cứu, `task` cho triển khai).
-  - Khử phụ thuộc: không validate/lint giữa chừng để tránh xung đột mã nguồn.
+Chạy trực tiếp từ repository mà không cần clone:
+```bash
+npx https://github.com/Association-of-stupid-people/HT_AI_SKILL.git
+```
 
-### 2.2 `harness-hub-orchestrator`
-* **Mục tiêu:** Kiểm soát tiến trình dài hạn (`hub` với `op: "start"`, `ps`, `logs`, `wait`) và điều phối giao tiếp giữa các worker.
-* **Trọng tâm:**
-  - Thiết lập readiness condition chính xác (regex log + TCP port).
-  - Quản lý lifecycle: dọn dẹp tiến trình, tránh rò rỉ process nền.
-  - Sử dụng hub messaging thay vì polling lãng phí token.
+Hoặc thêm trực tiếp thông qua trình quản lý skills mở:
+```bash
+npx skills add Association-of-stupid-people/HT_AI_SKILL
+```
 
-### 2.3 `harness-code-intelligence`
-* **Mục tiêu:** Chặn hành vi grep/sửa chay bằng text khi đã có công cụ chuyên sâu.
-* **Trọng tâm:**
-  - Quy tắc **LSP-first**: luôn tra cứu `definition`, `references`, `rename` qua LSP.
-  - Sử dụng `ast_edit` khi thay đổi cú pháp diện rộng.
-  - Dùng line-anchored `edit` với block operator (`PUT N*:`) thay vì viết đè toàn bộ file.
+---
 
-### 2.4 `harness-verification-loop`
-* **Mục tiêu:** Đảm bảo AI luôn có bằng chứng chạy thật trước khi nghiệm thu.
-* **Trọng tâm:**
-  - Smoke test thực thi trực tiếp, không phụ thuộc vào unit test tự bịa.
-  - Xác thực giao diện hoặc CLI output thực tế.
+### Cách 3: Cài đặt thủ công (Manual Setup)
+
+Sao chép thư mục `skills/` vào thư mục cấu hình của Agent tương ứng:
+
+- **Claude Code**: Sao chép vào `.claude/skills/` hoặc `~/.claude/skills/`
+- **Oh My Pi (OMP)**: Sao chép vào `~/.omp/skills/`
+- **Cursor**: Sao chép vào `.cursor/rules/`
+- **Codex / Universal**: Sao chép vào `.agent/skills/` và khai báo trong `AGENTS.md`
+
+---
+
+## 🏗️ Cấu Trúc Dự Án Chuẩn Mã Nguồn Mở
+
+```text
+HT_AI_SKILL/
+├── bin/
+│   └── install.js                     # CLI installer tự động phát hiện môi trường agent
+├── scripts/
+│   ├── install.sh                     # Trình cài đặt 1-line cho macOS/Linux
+│   └── install.ps1                    # Trình cài đặt 1-line cho Windows PowerShell
+├── package.json                       # npm / npx metadata
+├── CLAUDE.md                          # Tự động nạp vào Claude Code
+├── AGENTS.md                          # Tự động nạp vào Codex / Universal Agents
+├── docs/                              # Tài liệu kiến trúc chuyên sâu
+│   ├── lazy-loading-architecture.md   # Cơ chế nạp tiến bộ (Progressive Disclosure)
+│   └── multi-agent-compatibility.md   # Bảng ánh xạ các nền tảng agent
+├── skills/                            # Lõi Kỹ Năng (Core Skills - Lazy Loaded)
+│   ├── INDEX.md                       # Manifest định tuyến nhanh (Tầng 1)
+│   ├── harness-task-architect/        # Phân rã nhiệm vụ & điều phối subagent song song
+│   │   └── SKILL.md
+│   ├── harness-subagent-master/       # Ma trận phân loại agent & ranh giới file
+│   │   └── SKILL.md
+│   ├── harness-code-intelligence/     # LSP-first, AST refactoring & surgical edit
+│   │   └── SKILL.md
+│   └── harness-token-routing/         # Tích hợp CodeGraph, Claude-Mem, RTK, Caveman
+│       └── SKILL.md
+└── rules/                             # Các Quy Tắc Bất Biến (Hard Invariants)
+    ├── 01-anti-patterns.md            # Các bẫy hành vi sai lầm & cách tránh
+    ├── 02-concurrency-rules.md        # Giới hạn batch & an toàn song song
+    ├── 04-tokenless-ecosystem.md      # Quy tắc nén token và lọc log
+    └── 05-task-partitioning.md        # Nguyên tắc phân chia lát cắt dọc (Vertical Slicing)
+```
+
+---
+
+## ⚡ Cơ Chế Hoạt Động (Progressive Disclosure)
+
+Để tránh lãng phí context token, hệ thống sử dụng cơ chế nạp tiến bộ 2 tầng:
+1. **Tầng 1 (Manifest)**: Chỉ nạp bảng tóm tắt `skills/INDEX.md` (~50 tokens) vào System Prompt để agent biết khi nào cần kỹ năng nào.
+2. **Tầng 2 (On-Demand Loading)**: Agent chỉ thực hiện lệnh đọc chi tiết file `SKILL.md` hoặc `rules/*.md` khi bài toán người dùng thực sự kích hoạt từ khóa (`triggers`).
+
+---
+
+## 🤝 Đóng Góp & Giấy Phép
+Dự án được phát hành theo giấy phép [MIT](LICENSE). Mọi đóng góp mở rộng skill cho các agent harnesses mới đều được hoan nghênh!
